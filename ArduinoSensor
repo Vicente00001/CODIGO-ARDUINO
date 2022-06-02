@@ -26,29 +26,28 @@ void setup() {
 
 void loop() {
   
+  
+
   digitalWrite(TRIG, HIGH);
-  delay(500);
+  delay(1);
   digitalWrite(TRIG, LOW);
   DURACION = pulseIn(ECO, HIGH);
   DISTANCIA = DURACION / 58.2;
   Serial.println(DISTANCIA);
+  delay(500);
 
+  /** 
   
-  //SERVO-DISPARO
-  //if(DISTANCIA < 10){
-    
-    //servoDisparo.write(180);
-    //delay(200);
-    //servoDisparo.write(90);
-    //delay(400);
-    
-  //}
+  DURACION2 = pulseIn(ECO2,HIGH);
+  DISTANCIA2 = DURACION2 / 58.2;
+  
+  **/
   
   
   
   if(0 < DISTANCIA && DISTANCIA <= 30){
     servoRotacion.write(0);
-    delay(1000);
+    delay(DISTANCIA*10);
     servoRotacion.write(90);
     delay(500);
     
@@ -69,4 +68,13 @@ void loop() {
   
   
   
+  
+
+  
+  
+  
+
+  
+}
+
   
