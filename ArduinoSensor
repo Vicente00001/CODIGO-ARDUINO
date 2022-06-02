@@ -1,1 +1,72 @@
+#include <Servo.h>
+Servo servoRotacion;
+Servo servoDisparo;
+//Sensor UNO
+int TRIG = 4;
+int ECO = 3;
+//Sensor DOS
+int TRIG2 = 5;
+int ECO2 = 6;
 
+int DURACION;
+int DISTANCIA;
+
+void setup() {
+  
+  servoRotacion.attach(13);
+  servoDisparo.attach(11);
+  //se definen pines
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECO, INPUT);
+  pinMode(TRIG2, OUTPUT);
+  pinMode(ECO2, INPUT);
+  Serial.begin(9600);
+
+}
+
+void loop() {
+  
+  digitalWrite(TRIG, HIGH);
+  delay(500);
+  digitalWrite(TRIG, LOW);
+  DURACION = pulseIn(ECO, HIGH);
+  DISTANCIA = DURACION / 58.2;
+  Serial.println(DISTANCIA);
+
+  
+  //SERVO-DISPARO
+  //if(DISTANCIA < 10){
+    
+    //servoDisparo.write(180);
+    //delay(200);
+    //servoDisparo.write(90);
+    //delay(400);
+    
+  //}
+  
+  
+  
+  if(0 < DISTANCIA && DISTANCIA <= 30){
+    servoRotacion.write(0);
+    delay(1000);
+    servoRotacion.write(90);
+    delay(500);
+    
+    servoDisparo.write(0);
+    delay(300);
+    servoDisparo.write(90);
+    delay(300);
+    servoDisparo.write(0);
+    delay(300);
+    
+  }
+  
+  /**if (DISTANCIA > 0 && DISTANCIA <= 45){
+    servoRotacion.write(DISTANCIA);
+    delay(3000);
+  }
+  **/
+  
+  
+  
+  
