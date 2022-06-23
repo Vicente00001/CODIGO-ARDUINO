@@ -1,80 +1,142 @@
 #include <Servo.h>
 Servo servoRotacion;
 Servo servoDisparo;
-//Sensor UNO
-int TRIG = 4;
-int ECO = 3;
-//Sensor DOS
-int TRIG2 = 5;
-int ECO2 = 6;
+//Sensor UNO DIAGONAL
+const int TRIG = 9;
+const int ECO = 10;
+//Sensor DOS CONFIRMACION
+int TRIG_2 = 7;
+int ECO_2 = 6;
+// definir variables
+long duration;
+int distance1=0;
+int distance2=0;
+double Speed=0;
+int distance=0;
+
+unsigned long tiempo1 = 0;
+unsigned long tiempo2 = 0;
+unsigned diferenciaTiempo = 0;
 
 int DURACION;
-int DISTANCIA;
+int DISTANCIA = 10;
 
 void setup() {
   
   servoRotacion.attach(13);
-  servoDisparo.attach(11);
+  servoDisparo.attach(12);
   //se definen pines
   pinMode(TRIG, OUTPUT);
   pinMode(ECO, INPUT);
-  pinMode(TRIG2, OUTPUT);
-  pinMode(ECO2, INPUT);
+  pinMode(TRIG_2, OUTPUT);
+  pinMode(ECO_2, INPUT);
   Serial.begin(9600);
 
 }
 
 void loop() {
-  
-  
+
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
 
   digitalWrite(TRIG, HIGH);
-  delay(1);
+  delayMicroseconds(10);
   digitalWrite(TRIG, LOW);
-  DURACION = pulseIn(ECO, HIGH);
-  DISTANCIA = DURACION / 58.2;
-  Serial.println(DISTANCIA);
-  delay(500);
 
+  duration = pulseIn(ECO, HIGH);
+
+  //calculating distance
+  distance= duration*0.034/2;
+  
+  //Calcular velocidad
+  if(distance < 80){
+
+    tiempo1 = millis();
+
+    Serial.println(" "); 
+    distance1 = lecturaUltrasonica(); //invoca la funcion lecturaUltrasonica()
+    
+    while(distance2 >= 80){
+      distance2 = lecturaUltrasonica(); //invoca la funcion lecturaUltrasonica()
+    }
+    tiempo2 = millis();
+    diferenciaTiempo = tiempo1-tiempo2;
+      //formula que cambia segun las distancias en el tiempo
+    Speed = DISTANCIA/diferenciaTiempo; //el divisor 1.0 equivale al delay en segundos
+    Serial.print("Velocidad m/s: ");
+    Serial.println(Speed/100);
+    digitalWrite(TRIG, HIGH);
+    delay(1);
+    digitalWrite(TRIG, LOW);
+    delay(3000);
+    Serial.println("Listo para otra detección!..."); 
+    
+    
+    
+  } 
+  delay(100);
+  /**
+  else{
+    delay(2000);
+  }
+  **/
   /** 
   
   DURACION2 = pulseIn(ECO2,HIGH);
   DISTANCIA2 = DURACION2 / 58.2;
+
   
   **/
   
   
-  
+  /**
   if(0 < DISTANCIA && DISTANCIA <= 30){
-    servoRotacion.write(0);
-    delay(DISTANCIA*10);
-    servoRotacion.write(90);
-    delay(500);
+    servoRotacion.write(60);
+    delay(1000);
+    servoRotacion.write(180);
+    delay(100);
     
-    servoDisparo.write(0);
+    servoDisparo.write(90);
+    delay(300);
+    servoDisparo.write(180);
     delay(300);
     servoDisparo.write(90);
     delay(300);
-    servoDisparo.write(0);
-    delay(300);
+    
     
   }
   
-  /**if (DISTANCIA > 0 && DISTANCIA <= 45){
+  if (DISTANCIA > 0 && DISTANCIA <= 45){
     servoRotacion.write(DISTANCIA);
     delay(3000);
   }
   **/
-  
-  
-  
-  
 
-  
-  
-  
-
-  
 }
 
+float lecturaUltrasonica ()
+{
+// Clears the trigPin
+digitalWrite(TRIG, LOW);
+delayMicroseconds(2);
+
+// Sets the trigPin on HIGH state for 10 micro seconds
+digitalWrite(TRIG, HIGH);
+delayMicroseconds(10);
+digitalWrite(TRIG, LOW);
+
+// Reads the echoPin, returns the sound wave travel time in microseconds
+duration = pulseIn(ECO, HIGH);
+
+//calculating distance
+distance= duration*0.034/2;
+
+// Prints the distance on the Serial Monitor
+Serial.print("Distancia en cm : ");
+Serial.println(distance);
+
+
+return distance;
+
+}
   
