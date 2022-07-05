@@ -1,0 +1,156 @@
+#include <Servo.h>
+Servo servoRotacion;
+Servo servoDisparo;
+//Sensor UNO
+const int TRIG = 9;
+const int ECO = 10;
+
+// definir variables
+long duration;
+long duration2;
+int distance1=0;//distancia de primera deteccion
+int distance2=0;//distancia de segunda deteccion
+double Speed=0; //velocidad
+
+int RANGO_POSIBLE = 200; //variable que se modifica según la distancia máxima que puede alcanzar el objetivo
+
+void setup() {
+  servoRotacion.attach(13);
+  servoDisparo.attach(12);
+  //se definen pines
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECO, INPUT);
+  //Se inicializa la impresion por consola
+  Serial.begin(9600);
+}
+
+void loop() {
+  //Se lee la primera distancia
+  distance1 = lecturaUltrasonica();
+
+  //Control de error si es que la distancia es menor a 5 o mayor a RANGO_POSIBLE
+  if(distance1 >= 5 && distance1 < RANGO_POSIBLE){
+    
+    //los topes son para tener un margen del numero que se puede permitir tener en la distancia 2
+    int topeSuperiorPosible = distance1*2;
+    int topeInferiorPosible = distance1/2;
+
+    //delayDistancias es el tiempo que se ocupa en la formula de velocidad = d/s (ESTÁ EN MicroSegundos)
+    double delayDistancias = 300;
+
+    //Se lee la segunda distancia
+    distance2 = lecturaUltrasonica2();
+
+    //Condicion para que solo acepte una distancia entre ambos topes
+    while(distance2 < topeInferiorPosible && topeSuperiorPosible < distance2){
+      Serial.println("ERROR: DISTANCIA (2) INVÁLIDA");  
+      delayDistancias +=1;
+      distance2 = lecturaUltrasonica2();
+      //ACA FALTA LEER EL TIEMPO QUE SE DEMORA EN EJECUTAR 1 CICLO WHILE EN MICROSEGUNDOS!!!! PUSE 1 MICROSEGUNDO POR DEFECTO
+    }
+    //Se aplica el delay involucrado en la formula de velocidad
+    delay(delayDistancias);
+
+    //Imprimimos distancias
+    Serial.print("D1: ");  
+    Serial.print(distance1);
+    Serial.print(" | ");
+    Serial.print("D2: ");  
+    Serial.println(distance2);
+
+    //Transformamos el delay de MS a Segundos
+    double delayFinalSegundos = delayDistancias/1000;
+
+    //calculo de velocidad en cm/s
+    Speed = (distance2-distance1)/delayFinalSegundos; //esta variable fluctua con el delay
+  
+    //imprime velocidad
+    Serial.print("Velocidad m/s: ");
+
+    //pasamos de cm/s a m/s
+    double metrosPorSegundo = Speed/100;
+    Serial.println(abs(metrosPorSegundo));//abs es para valor absoluto
+    Serial.println(" ");
+  
+    if(80 <= distance2 && distance2 <= 100){
+    
+    
+      //servoRotacion.write(60);
+      //delay(1000);
+      //servoRotacion.write(180);
+      //delay(100);
+    
+      //Así funciona el servo disparo
+      servoDisparo.write(90);
+      delay(300);
+      servoDisparo.write(180);
+      delay(300);
+      servoDisparo.write(90);
+      delay(300);
+    
+      Serial.println("Disparo realizado! Espere 15 segundos..."); 
+      Serial.println(" ");
+      delay(15000);
+    }
+  }else{
+    //por si es que la distancia 1 es invalida o no apta
+    Serial.println("ERROR: DISTANCIA (1) INVÁLIDA");
+    
+  }
+
+  
+
+  
+}
+
+
+
+float lecturaUltrasonica ()
+{
+// "Limpia" el pin del trigger
+digitalWrite(TRIG, LOW);
+delayMicroseconds(2);
+
+// Coloca el estado del trigger en ALTO por 10 microsegundos
+digitalWrite(TRIG, HIGH);
+delayMicroseconds(10);
+digitalWrite(TRIG, LOW);
+
+
+// Lee el pin echo y retorna el tiempo del viaje de la onda de sonido en microsedungos
+duration = pulseIn(ECO, HIGH);
+
+//se calcula la distancia1
+distance1= duration*0.034/2;
+
+
+
+
+return distance1;
+
+}
+
+float lecturaUltrasonica2 ()
+{
+// "Limpia" el pin del trigger
+digitalWrite(TRIG, LOW);
+delayMicroseconds(2);
+
+// Coloca el estado del trigger en ALTO por 10 microsegundos
+digitalWrite(TRIG, HIGH);
+delayMicroseconds(10);
+digitalWrite(TRIG, LOW);
+
+// Lee el pin echo y retorna el tiempo del viaje de la onda de sonido en microsedungos
+duration2 = pulseIn(ECO, HIGH);
+
+//se calcula la distancia2
+distance2= duration2*0.034/2;
+
+
+
+
+return distance2;
+
+}
+
