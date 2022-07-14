@@ -2,8 +2,9 @@
 Servo servoRotacion;
 Servo servoDisparo;
 //Sensor UNO
-const int TRIG = 9;
+const int TRIG = 11;
 const int ECO = 10;
+
 
 // definir variables
 long duration;
@@ -12,16 +13,20 @@ int distance1=0;//distancia de primera deteccion
 int distance2=0;//distancia de segunda deteccion
 double Speed=0; //velocidad
 
+
+
 int RANGO_POSIBLE = 200; //variable que se modifica según la distancia máxima que puede alcanzar el objetivo
 
 void setup() {
-  servoRotacion.attach(13);
-  servoDisparo.attach(12);
+  servoRotacion.attach(2);
+  servoDisparo.attach(13);
   //se definen pines
   pinMode(TRIG, OUTPUT);
   pinMode(ECO, INPUT);
   //Se inicializa la impresion por consola
   Serial.begin(9600);
+
+  
 }
 
 void loop() {
@@ -29,24 +34,27 @@ void loop() {
   distance1 = lecturaUltrasonica();
 
   //Control de error si es que la distancia es menor a 5 o mayor a RANGO_POSIBLE
-  if(distance1 >= 5 && distance1 < RANGO_POSIBLE){
+  if(distance1 >= 10 && distance1 < RANGO_POSIBLE){
     
     //los topes son para tener un margen del numero que se puede permitir tener en la distancia 2
     int topeSuperiorPosible = distance1*2;
     int topeInferiorPosible = distance1/2;
 
     //delayDistancias es el tiempo que se ocupa en la formula de velocidad = d/s (ESTÁ EN MicroSegundos)
-    double delayDistancias = 300;
+    double delayDistancias = 600;
 
     //Se lee la segunda distancia
+    delay(300);
     distance2 = lecturaUltrasonica2();
 
     //Condicion para que solo acepte una distancia entre ambos topes
     while(distance2 < topeInferiorPosible && topeSuperiorPosible < distance2){
-      Serial.println("ERROR: DISTANCIA (2) INVÁLIDA");  
+      Serial.println("ERROR: DISTANCIA (2) INVÁLIDA: ");
+      Serial.print(distance2);
+      Serial.println(" Centímetros");  
       delayDistancias +=1;
       distance2 = lecturaUltrasonica2();
-      //ACA FALTA LEER EL TIEMPO QUE SE DEMORA EN EJECUTAR 1 CICLO WHILE EN MICROSEGUNDOS!!!! PUSE 1 MICROSEGUNDO POR DEFECTO
+      
     }
     //Se aplica el delay involucrado en la formula de velocidad
     delay(delayDistancias);
@@ -65,38 +73,56 @@ void loop() {
     Speed = (distance2-distance1)/delayFinalSegundos; //esta variable fluctua con el delay
   
     //imprime velocidad
-    Serial.print("Velocidad m/s: ");
+    Serial.print("Velocidad cm/s: ");
 
     //pasamos de cm/s a m/s
     double metrosPorSegundo = Speed/100;
-    Serial.println(abs(metrosPorSegundo));//abs es para valor absoluto
+    double msPositivo = abs(Speed); //abs es para valor absoluto
+    Serial.println(msPositivo);
     Serial.println(" ");
   
-    if(80 <= distance2 && distance2 <= 100){
-    
-    
-      //servoRotacion.write(60);
-      //delay(1000);
-      //servoRotacion.write(180);
-      //delay(100);
+    if(30 <= distance2 && distance2 <= 100){//RANGO DE DETECCIÓN: CM MINIMOS VS CM MAXIMOS
+
+      //Variable para sumarle posteriormente un ángulo a la torreta proporcional a la velocidad
+      int AnguloDisparo = (Speed/4);
+      //Se realiza la suma
+      int AnguloFinal = 100+AnguloDisparo;
+      //Posicion inicial servo grande
+      servoRotacion.write(60);
+      delay(1000);
+      //Se ejecuta la Rotacion según la velocidad
+      servoRotacion.write(AnguloFinal);
+      delay(10);
     
       //Así funciona el servo disparo
+      
       servoDisparo.write(90);
       delay(300);
+      //gatilla
       servoDisparo.write(180);
       delay(300);
-      servoDisparo.write(90);
-      delay(300);
-    
-      Serial.println("Disparo realizado! Espere 15 segundos..."); 
+      
+     
+      
+      Serial.println("Disparo realizado! Espere 8 segundos..."); 
       Serial.println(" ");
-      delay(15000);
+      //Delay para que se calme la torreta
+      delay(8000);
+      servoRotacion.write(60);
+      delay(300);
+      servoDisparo.write(90);
+      delay(1000);
+      //Los servos vuelven a su posición inicial y se empiezan a buscar las distancias para aplicar en la formula de la velocidad nuevamente
+
     }
   }else{
     //por si es que la distancia 1 es invalida o no apta
-    Serial.println("ERROR: DISTANCIA (1) INVÁLIDA");
+    Serial.print("ERROR: DISTANCIA (1) INVÁLIDA: ");
+    Serial.print(distance1);
+    Serial.println(" Centímetros");
     
   }
+  
 
   
 
@@ -153,4 +179,5 @@ distance2= duration2*0.034/2;
 return distance2;
 
 }
+
 
